@@ -24,9 +24,11 @@ cd gosilent
 # Build the application
 go build
 
-# Run GoSilent against your target IP
-./gosilent <target IP address>
+# Running GoSilent against your target IP
+
+# Ensure you run the binary with root privileges:
+sudo ./gosilent <target IP address>
 # Example:
-./gosilent 192.168.1.1
+sudo ./gosilent 192.168.1.1
 ```
 
