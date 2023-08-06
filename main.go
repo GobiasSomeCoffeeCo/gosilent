@@ -6,6 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"os"
+	"os/user"
 	"sync"
 	"time"
 
@@ -66,7 +68,7 @@ func (s *scanner) getHandle(ifaceName string) (*pcap.Handle, error) {
 	if handle, ok := s.handleMap[ifaceName]; ok {
 		return handle, nil
 	} else {
-		handle, err := pcap.OpenLive(ifaceName, 65536, true, pcap.BlockForever)
+		handle, err := pcap.OpenLive("wlo1", 65536, true, pcap.BlockForever)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +111,7 @@ func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
 		for {
 			handle, ok := s.handleMap[s.iface.Name]
 			if !ok {
-				log.Println("Unable to get PCAP handle")
+				log.Println("Unable to get PCAP handle 3")
 			}
 
 			data, _, err := handle.ReadPacketData()
@@ -190,7 +192,10 @@ func (s *scanner) scan() error {
 		},
 	}
 	tcp.SetNetworkLayerForChecksum(&ip4)
-	handle := s.handleMap[s.iface.Name]
+	handle, ok := s.handleMap[s.iface.Name]
+	if !ok {
+		log.Println("Unable to get PCAP handle")
+	}
 	// Create channels for communication between goroutines
 	done := make(chan bool)
 	packetCh := make(chan gopacket.Packet)
@@ -264,7 +269,7 @@ func (s *scanner) scan() error {
 			} else if tcp.RST {
 				//log.Printf("  port %v closed", tcp.SrcPort)
 			} else if tcp.SYN && tcp.ACK {
-				log.Printf("%s %v open", GOOD, tcp.SrcPort)
+				log.Printf("%s open %v", GOOD, tcp.SrcPort)
 			} else {
 				log.Printf("ignoring useless packet") //
 			}
@@ -300,6 +305,17 @@ func randomizer() int {
 
 func main() {
 	defer util.Run()()
+	currentUser, err := user.Current()
+	if err != nil {
+		fmt.Println("Failed to get the current user:", err)
+		os.Exit(1)
+	}
+
+	if currentUser.Uid != "0" {
+		fmt.Println("This program must be run as root. Please use 'sudo'.")
+		os.Exit(1)
+	}
+
 	router, err := routing.New()
 	if err != nil {
 		log.Fatal("routing error:", err)
@@ -319,17 +335,14 @@ func main() {
 
 		wg.Add(1) // Increment wait group counter
 
-		// This goroutine is unnecessary at the moment, but will allow for passing multiple IP's to be scanned
 		go func(ip net.IP) { // Launch a goroutine for each IP to scan
 			defer wg.Done() // Decrement wait group counter when goroutine completes
 
 			s, err := newScanner(ip, router)
-			log.Println(".....")
 			if err != nil {
 				log.Printf("unable to create scanner for %v: %v", ip, err)
 				return
 			}
-			log.Println("About to scan...")
 			if err := s.scan(); err != nil {
 				log.Printf("unable to scan %v: %v", ip, err)
 			}
@@ -337,5 +350,5 @@ func main() {
 		}(ip)
 	}
 
-	wg.Wait()
+	wg.Wait() // Wait for all goroutines to complete
 }
