@@ -1,32 +1,32 @@
-# gosilent
-A silent SYN scanner. 
+# GoSilent: The Speedy Silent SYN Scanner
 
-This is an updated take on the [Gopacket Synscan](https://github.com/google/gopacket/blob/master/examples/synscan/main.go). It used to take several minutes for a scan to complete. It now can can run through all 65535 ports in a matter of seconds.
+Introducing GoSilent - an enhanced and accelerated version of the [Gopacket Synscan](https://github.com/google/gopacket/blob/master/examples/synscan/main.go). While the traditional scan could take minutes, GoSilent breezes through all 65535 ports in mere seconds.
 
-If you want to try it out, seel below...
+**Ready to give it a whirl? Here's how:**
 
-You'll need libpcap installed on your system for this program to work. The installation of libpcap depends on your operating system:
+Before you begin, ensure `libpcap` is installed on your system:
 
-    * On Ubuntu, you can install it using the command: sudo apt-get install libpcap-dev
-    * On macOS, you can install it using the command: brew install libpcap
-    * On Windows, it's more complex. Windows doesn't natively support libpcap, but you can use the Npcap or WinPcap libraries, which provide similar functionality.
+- **Ubuntu**: Install using `sudo apt-get install libpcap-dev`
+- **macOS**: Install with `brew install libpcap`
+- **Windows**: A tad trickier. Native support for libpcap is absent, but Npcap or WinPcap libraries serve as suitable alternatives.
 
-    * Make sure you have go downloaded.
+And don't forget, you should have Go set up on your machine.
+
+**Getting Started with GoSilent:**
 
 ```bash
+# Clone the repository
 git clone https://github.com/GobiasSomeCoffeeCo/gosilent.git
-```
 
-```bash
+# Navigate to the directory
 cd gosilent
-```
 
-```bash
+# Build the application
 go build
-```
 
-```bash
+# Run GoSilent against your target IP
 ./gosilent <target IP address>
+# Example:
 ./gosilent 192.168.1.1
 ```
 
