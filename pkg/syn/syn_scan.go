@@ -29,6 +29,7 @@ type ScanOptions struct {
 	UseECE        bool
 	UseCWR        bool
 	UseNS         bool
+	UseXMas       bool
 	InterfaceName string
 	Ports         string
 	Target        string
@@ -67,25 +68,29 @@ func newScanner(ip net.IP, router routing.Router, opts *ScanOptions) (*scanner, 
 		return nil, err
 	}
 
-	if opts.InterfaceName != "" {
-		// TODO This method doesnt seem to find the interface.
-		userIface, err := net.InterfaceByName(opts.Target)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
-		}
-		s.iface.Name = userIface.Name
-	} else {
-		log.Printf("scanning ip %v with interface %v, gateway %v, src %v", ip, iface.Name, gw, src)
-		s.gw, s.src, s.iface = gw, src, iface
-	}
+	s.gw, s.src, s.iface = gw, src, iface
+
 	// Open the handle for reading/writing.
 	// Note we could very easily add some BPF filtering here to greatly
 	// decrease the number of packets we have to look at when getting back
 	// scan results.
 	s.handleMap = make(map[string]*pcap.Handle)
 
-	s.getHandle(iface.Name)
+	if opts.InterfaceName != "" {
+		s.iface, err = net.InterfaceByName(opts.InterfaceName)
+		if err != nil {
+			fmt.Println("Cannot get interface by name")
+		}
+		s.getHandle(opts.InterfaceName)
+
+		log.Printf("scanning ip %v with interface %v, gateway %v, src %v", ip, iface.Name, gw, src)
+	} else {
+
+		s.getHandle(iface.Name)
+		log.Printf("scanning ip %v with interface %v, gateway %v, src %v", ip, iface.Name, gw, src)
+
+	}
+
 	return s, nil
 }
 
@@ -95,7 +100,7 @@ func (s *scanner) getHandle(ifaceName string) (*pcap.Handle, error) {
 	if handle, ok := s.handleMap[ifaceName]; ok {
 		return handle, nil
 	} else {
-		handle, err := pcap.OpenLive(ifaceName, 65536, true, pcap.BlockForever)
+		handle, err := pcap.OpenLive(ifaceName, 1600, true, pcap.BlockForever)
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +143,7 @@ func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
 		for {
 			handle, ok := s.handleMap[s.iface.Name]
 			if !ok {
-				log.Println("Unable to get PCAP handle 3")
+				log.Println("Unable to get PCAP handle in getHwAddr()")
 			}
 
 			data, _, err := handle.ReadPacketData()
@@ -146,7 +151,7 @@ func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
 				log.Println("NextErrorTimeoutExpired")
 				continue
 			} else if err != nil {
-				log.Println("Error in handling ReadPacketData()")
+				log.Printf("%s Error in handling ReadPacketData()", helpers.BAD)
 			}
 			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.NoCopy)
 			if arpLayer := packet.Layer(layers.LayerTypeARP); arpLayer != nil {
@@ -164,7 +169,7 @@ func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
 func (s *scanner) close() {
 	handle, ok := s.handleMap[s.iface.Name]
 	if !ok {
-		log.Println("Unable to get PCAP handle")
+		log.Printf("%s Unable to get PCAP handle in close()", helpers.BAD)
 	}
 	handle.Close()
 }
@@ -207,7 +212,7 @@ func (s *scanner) scan() error {
 	}
 	tcp := layers.TCP{
 		SrcPort: 54321,
-		DstPort: 21, // will be incremented during the scan
+		DstPort: 0, // will be incremented during the scan
 		SYN:     true,
 		Window:  1024,
 		Seq:     35476,
@@ -221,7 +226,7 @@ func (s *scanner) scan() error {
 	tcp.SetNetworkLayerForChecksum(&ip4)
 	handle, ok := s.handleMap[s.iface.Name]
 	if !ok {
-		log.Println("Unable to get PCAP handle")
+		log.Println("Unable to get PCAP handle in scan()")
 	}
 	// Create channels for communication between goroutines
 	done := make(chan bool)
@@ -229,12 +234,14 @@ func (s *scanner) scan() error {
 
 	ipFlow := gopacket.NewFlow(layers.EndpointIPv4, s.dst, s.src)
 
+//	tcp = handleFlags()
+
 	// Goroutine for sending packets
 	go func() {
 		defer close(done) // Notify other goroutine when done
 
 		start := time.Now()
-		fmt.Println("Starting Syn Scan...")
+		fmt.Println("\033[1;94mStarting GoSilent...\033[0m")
 
 		for tcp.DstPort < 65535 {
 			start = time.Now()
@@ -316,7 +323,7 @@ func (s *scanner) send(l ...gopacket.SerializableLayer) error {
 
 	handle, ok := s.handleMap[s.iface.Name]
 	if !ok {
-		log.Println("Unable to access PCAP handle")
+		log.Println("Unable to access PCAP handle in send()")
 	}
 	return handle.WritePacketData(s.buf.Bytes())
 }
