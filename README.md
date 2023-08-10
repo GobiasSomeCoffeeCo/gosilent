@@ -36,7 +36,7 @@ sudo ./gosilent 192.168.1.1
 
 You now have the flexibility to use interface and network flags with GoSilent to customize your scans.
 
-Interface Flags:
+**Interface Flags:**
 
     -i Network interface to use. If empty, it will fallback to system defaults.
 
@@ -45,7 +45,7 @@ Example:
 ```bash
 sudo ./gosilent -t 192.168.1.1 -i eno2
 ```
-Set Network Flags:
+**Network Flags:**
 
     -sF Set FIN flag for TCP
     -sS Set SYN flag for TCP
