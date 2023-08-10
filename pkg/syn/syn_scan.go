@@ -115,55 +115,55 @@ func (s *scanner) getHandle(ifaceName string) (*pcap.Handle, error) {
 // reply.  This is pretty slow right now, since it blocks on the ARP
 // request/reply.
 
-func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
-	// Prepare the layers to send for an ARP request.
-	eth := layers.Ethernet{
-		SrcMAC:       s.iface.HardwareAddr,
-		DstMAC:       net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
-		EthernetType: layers.EthernetTypeARP,
-	}
-	arp := layers.ARP{
-		AddrType:          layers.LinkTypeEthernet,
-		Protocol:          layers.EthernetTypeIPv4,
-		HwAddressSize:     6,
-		ProtAddressSize:   4,
-		Operation:         layers.ARPRequest,
-		SourceHwAddress:   []byte(s.iface.HardwareAddr),
-		SourceProtAddress: []byte(s.src.To4()),
-		DstHwAddress:      []byte{0, 0, 0, 0, 0, 0},
-		DstProtAddress:    []byte(arpDst.To4()),
-	}
-	// Send a single ARP request packet.
-	if err := s.send(&eth, &arp); err != nil {
-		// Handle error.
-		log.Printf("Unable to send arp request packet: %v", err)
-	}
-	log.Println("Getting HW address")
-	go func() {
-		for {
-			handle, ok := s.handleMap[s.iface.Name]
-			if !ok {
-				log.Println("Unable to get PCAP handle in getHwAddr()")
-			}
-
-			data, _, err := handle.ReadPacketData()
-			if err == pcap.NextErrorTimeoutExpired {
-				log.Println("NextErrorTimeoutExpired")
-				continue
-			} else if err != nil {
-				log.Printf("%s Error in handling ReadPacketData()", helpers.BAD)
-			}
-			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.NoCopy)
-			if arpLayer := packet.Layer(layers.LayerTypeARP); arpLayer != nil {
-				arp := arpLayer.(*layers.ARP)
-				if net.IP(arp.SourceProtAddress).Equal(arpDst) {
-					resultChan <- net.HardwareAddr(arp.SourceHwAddress)
-					return
-				}
-			}
-		}
-	}()
-}
+//func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
+//	// Prepare the layers to send for an ARP request.
+//	eth := layers.Ethernet{
+//		SrcMAC:       s.iface.HardwareAddr,
+//		DstMAC:       net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+//		EthernetType: layers.EthernetTypeARP,
+//	}
+//	arp := layers.ARP{
+//		AddrType:          layers.LinkTypeEthernet,
+//		Protocol:          layers.EthernetTypeIPv4,
+//		HwAddressSize:     6,
+//		ProtAddressSize:   4,
+//		Operation:         layers.ARPRequest,
+//		SourceHwAddress:   []byte(s.iface.HardwareAddr),
+//		SourceProtAddress: []byte(s.src.To4()),
+//		DstHwAddress:      []byte{0, 0, 0, 0, 0, 0},
+//		DstProtAddress:    []byte(arpDst.To4()),
+//	}
+//	// Send a single ARP request packet.
+//	if err := s.send(&eth, &arp); err != nil {
+//		// Handle error.
+//		log.Printf("Unable to send arp request packet: %v", err)
+//	}
+//	log.Println("Getting HW address")
+//	go func() {
+//		for {
+//			handle, ok := s.handleMap[s.iface.Name]
+//			if !ok {
+//				log.Println("Unable to get PCAP handle in getHwAddr()")
+//			}
+//
+//			data, _, err := handle.ReadPacketData()
+//			if err == pcap.NextErrorTimeoutExpired {
+//				log.Println("NextErrorTimeoutExpired")
+//				continue
+//			} else if err != nil {
+//				log.Printf("%s Error in handling ReadPacketData()", helpers.BAD)
+//			}
+//			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.NoCopy)
+//			if arpLayer := packet.Layer(layers.LayerTypeARP); arpLayer != nil {
+//				arp := arpLayer.(*layers.ARP)
+//				if net.IP(arp.SourceProtAddress).Equal(arpDst) {
+//					resultChan <- net.HardwareAddr(arp.SourceHwAddress)
+//					return
+//				}
+//			}
+//		}
+//	}()
+//}
 
 // close cleans up the handle.
 func (s *scanner) close() {
@@ -175,7 +175,7 @@ func (s *scanner) close() {
 }
 
 // scan scans the dst IP address of this scanner.
-func (s *scanner) scan() error {
+func (s *scanner) scan(opts *ScanOptions) error {
 	// First off, get the MAC address we should be sending packets to.
 	hwaddrChan := make(chan net.HardwareAddr)
 	defer close(hwaddrChan)
@@ -234,8 +234,9 @@ func (s *scanner) scan() error {
 
 	ipFlow := gopacket.NewFlow(layers.EndpointIPv4, s.dst, s.src)
 
-//	tcp = handleFlags()
+	handleFlags(opts, &tcp)
 
+	fmt.Println(tcp)
 	// Goroutine for sending packets
 	go func() {
 		defer close(done) // Notify other goroutine when done
@@ -367,7 +368,7 @@ func SynScan(opts *ScanOptions) {
 		log.Printf("unable to create scanner for %v: %v", ip, err)
 		return
 	}
-	if err := s.scan(); err != nil {
+	if err := s.scan(opts); err != nil {
 		log.Printf("unable to scan %v: %v", ip, err)
 	}
 	s.close()
