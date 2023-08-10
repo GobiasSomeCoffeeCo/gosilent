@@ -1,7 +1,6 @@
 package silentscan
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -109,62 +108,6 @@ func (s *scanner) getHandle(ifaceName string) (*pcap.Handle, error) {
 	}
 }
 
-// getHwAddr is a hacky but effective way to get the destination hardware
-// address for our packets.  It does an ARP request for our gateway (if there is
-// one) or destination IP (if no gateway is necessary), then waits for an ARP
-// reply.  This is pretty slow right now, since it blocks on the ARP
-// request/reply.
-
-//func (s *scanner) getHwAddr(arpDst net.IP, resultChan chan<- net.HardwareAddr) {
-//	// Prepare the layers to send for an ARP request.
-//	eth := layers.Ethernet{
-//		SrcMAC:       s.iface.HardwareAddr,
-//		DstMAC:       net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
-//		EthernetType: layers.EthernetTypeARP,
-//	}
-//	arp := layers.ARP{
-//		AddrType:          layers.LinkTypeEthernet,
-//		Protocol:          layers.EthernetTypeIPv4,
-//		HwAddressSize:     6,
-//		ProtAddressSize:   4,
-//		Operation:         layers.ARPRequest,
-//		SourceHwAddress:   []byte(s.iface.HardwareAddr),
-//		SourceProtAddress: []byte(s.src.To4()),
-//		DstHwAddress:      []byte{0, 0, 0, 0, 0, 0},
-//		DstProtAddress:    []byte(arpDst.To4()),
-//	}
-//	// Send a single ARP request packet.
-//	if err := s.send(&eth, &arp); err != nil {
-//		// Handle error.
-//		log.Printf("Unable to send arp request packet: %v", err)
-//	}
-//	log.Println("Getting HW address")
-//	go func() {
-//		for {
-//			handle, ok := s.handleMap[s.iface.Name]
-//			if !ok {
-//				log.Println("Unable to get PCAP handle in getHwAddr()")
-//			}
-//
-//			data, _, err := handle.ReadPacketData()
-//			if err == pcap.NextErrorTimeoutExpired {
-//				log.Println("NextErrorTimeoutExpired")
-//				continue
-//			} else if err != nil {
-//				log.Printf("%s Error in handling ReadPacketData()", helpers.BAD)
-//			}
-//			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.NoCopy)
-//			if arpLayer := packet.Layer(layers.LayerTypeARP); arpLayer != nil {
-//				arp := arpLayer.(*layers.ARP)
-//				if net.IP(arp.SourceProtAddress).Equal(arpDst) {
-//					resultChan <- net.HardwareAddr(arp.SourceHwAddress)
-//					return
-//				}
-//			}
-//		}
-//	}()
-//}
-
 // close cleans up the handle.
 func (s *scanner) close() {
 	handle, ok := s.handleMap[s.iface.Name]
@@ -180,23 +123,6 @@ func (s *scanner) scan(opts *ScanOptions) error {
 	hwaddrChan := make(chan net.HardwareAddr)
 	defer close(hwaddrChan)
 
-	// First off, get the MAC address we should be sending packets to.
-	for _, arpDst := range flag.Args() {
-		ip := net.ParseIP(arpDst)
-		if ip == nil {
-			continue
-		}
-		//		go s.getHwAddr(ip, hwaddrChan)
-	}
-
-	//hwaddr, ok := <-hwaddrChan
-
-	//if !ok || hwaddr == nil {
-	// Handle error.
-	//log.Println("Unable to get hwaddrChan")
-	//}
-	// Construct all the network layers we need.
-	// Manually added DstMac hardware address as it was holding up the program when running getHwAddr
 	eth := layers.Ethernet{
 		SrcMAC:       s.iface.HardwareAddr,
 		DstMAC:       net.HardwareAddr{0xf0, 0x81, 0x75, 0x03, 0x50, 0x92},

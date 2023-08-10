@@ -7,8 +7,6 @@ import (
 func main() {
 	opts := ParseCLI()
 
-	// Handle the ports
-
 	silentscan.SynScan(opts)
 
 }
