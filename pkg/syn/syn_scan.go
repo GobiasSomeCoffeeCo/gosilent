@@ -236,7 +236,6 @@ func (s *scanner) scan(opts *ScanOptions) error {
 
 	handleFlags(opts, &tcp)
 
-	fmt.Println(tcp)
 	// Goroutine for sending packets
 	go func() {
 		defer close(done) // Notify other goroutine when done
