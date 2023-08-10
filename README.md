@@ -32,3 +32,34 @@ sudo ./gosilent <target IP address>
 sudo ./gosilent 192.168.1.1
 ```
 
+**Enhanced Scanning with Interface and Network Flags:**
+
+You now have the flexibility to use interface and network flags with GoSilent to customize your scans.
+
+Interface Flags:
+
+    -i Network interface to use. If empty, it will fallback to system defaults.
+
+Example:
+
+```bash
+sudo ./gosilent -t 192.168.1.1 -i eno2
+```
+Set Network Flags:
+
+    -sF Set FIN flag for TCP
+    -sS Set SYN flag for TCP
+    -sA Set ACK flag for TCP
+    -sU Set URG flag for TCP
+    -sP Set PSH flag for TCP
+    -sR Set RST flag for TCP
+    -sX Set 'XMas Flag' (URG PSH FIN) for TCP
+
+Example:
+
+```bash
+sudo ./gosilent -t 192.168.1.1 -sF -sA -sP
+```
+
+Feel free to mix and match flags as per your requirements!
+
