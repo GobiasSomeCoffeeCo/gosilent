@@ -27,9 +27,9 @@ go build
 # Running GoSilent against your target IP
 
 # Ensure you run the binary with root privileges:
-sudo ./gosilent <target IP address>
+sudo ./gosilent -t <target IP address>
 # Example:
-sudo ./gosilent 192.168.1.1
+sudo ./gosilent -t 192.168.1.1
 ```
 
 **Enhanced Scanning with Interface and Network Flags:**
