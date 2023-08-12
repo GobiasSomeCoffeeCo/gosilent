@@ -137,7 +137,7 @@ func (s *scanner) scan(opts *ScanOptions) error {
 		start := time.Now()
 		fmt.Println("\033[1;94mStarting GoSilent...\033[0m")
 
-		for tcp.DstPort < 500 {
+		for tcp.DstPort < 65535 {
 			start = time.Now()
 
 			// Give time for the read
