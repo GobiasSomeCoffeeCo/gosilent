@@ -18,6 +18,7 @@ func ParseCLI() *silentscan.ScanOptions {
 	flag.BoolVar(&options.UseACK, "sA", false, "Set ACK flag for TCP")
 	flag.BoolVar(&options.UseURG, "sU", false, "Set URG flag for TCP")
 	flag.BoolVar(&options.UseXMas, "sX", false, "Set 'XMas Flag' (URG PSH FIN) for TCP")
+	flag.BoolVar(&options.UseXMas, "b", false, "Attempt to grab the banner from the service")
 	flag.StringVar(&options.InterfaceName, "i", "", "Network interface to use. (e.g., sudo ./gosilent -t 192.168.1.1 -i eno2) If empty, will fallback to system defaults.")
 	//flag.StringVar(&options.Ports, "ports", "22,80,135,139,400-10000", "Ports to scan (e.g., 22,80,139,400-500). Use commas and hyphens for ranges.")
 	flag.StringVar(&options.Target, "t", "", "The target IP you'd like to scan (e.g., sudo ./gosilent -t 192.168.1.1)")
