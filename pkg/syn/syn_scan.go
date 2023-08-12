@@ -25,9 +25,6 @@ type ScanOptions struct {
 	UsePSH        bool
 	UseACK        bool
 	UseURG        bool
-	UseECE        bool
-	UseCWR        bool
-	UseNS         bool
 	UseXMas       bool
 	InterfaceName string
 	Ports         string
@@ -140,7 +137,7 @@ func (s *scanner) scan(opts *ScanOptions) error {
 		start := time.Now()
 		fmt.Println("\033[1;94mStarting GoSilent...\033[0m")
 
-		for tcp.DstPort < 65535 {
+		for tcp.DstPort < 500 {
 			start = time.Now()
 
 			// Give time for the read
@@ -192,7 +189,7 @@ func (s *scanner) scan(opts *ScanOptions) error {
 			if net := packet.NetworkLayer(); net == nil {
 				//log.Printf("packet has no network layer") //
 			} else if net.NetworkFlow() != ipFlow {
-				log.Printf("packet does not match our ip src/dst") //
+				//log.Printf("packet does not match our ip src/dst") //
 			} else if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer == nil {
 				//log.Printf("packet has not tcp layer") //
 			} else if tcp, ok := tcpLayer.(*layers.TCP); !ok {
