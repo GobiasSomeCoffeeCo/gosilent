@@ -1,12 +1,13 @@
 package silentscan
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
-	//"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 )
 
@@ -30,4 +31,25 @@ func BannerGrab(s *ScanResults) {
 		s.Banner = fmt.Sprintf("Banner: %s\n", buf[:n])
 	}()
 
+}
+
+func GetHTTPBanner(s *ScanResults) (string, error) {
+	s.TargetIP = "http://" + s.TargetIP
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr}
+	resp, err := client.Head(s.TargetIP)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	serverHeader := resp.Header.Get("Server")
+	if serverHeader == "" {
+		return "No Server header found", nil
+	}
+	s.Banner = fmt.Sprintf("Banner: %s\n", serverHeader)
+	return serverHeader, nil
 }

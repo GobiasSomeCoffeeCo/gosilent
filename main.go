@@ -28,6 +28,12 @@ func main() {
 	for _, v := range res {
 		if opts.Banner {
 			silentscan.BannerGrab(v)
+			if v.Port == "80" || v.Port == "443" || v.Port == "8000" || v.Port == "8008" || v.Port == "8080" || v.Port == "8443" || v.Port == "8888" {
+				_, err := silentscan.GetHTTPBanner(v)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		}
 		if len(v.Banner) == 9 || v.Banner == "" {
 			fmt.Printf("%v\n", v.Status)

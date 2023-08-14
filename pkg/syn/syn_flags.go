@@ -5,7 +5,7 @@ import (
 )
 
 func handleFlags(opts *ScanOptions, tcp *layers.TCP) {
-	// SYN defaults to true. If users specify flags, 
+	// SYN defaults to true. If users specify flags,
 	// we'll assume they prefer it off. We'll verify at the end if they want it enabled.
 	if opts.UseACK {
 		tcp.ACK = true

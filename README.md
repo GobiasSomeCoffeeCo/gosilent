@@ -65,8 +65,8 @@ Feel free to mix and match flags as per your requirements!
 
 **Utility Flags:**
 
-    -b Enable a service banner grabber. A simple banner grabber which connects to an open TCP port and prints out anything sent by the listening service within two seconds. 
-    -v Enable verbose mode for real-time display of newly opened ports.
+    -v Enable verbose mode. Provides real-time display of detected open ports.
+    -b Enable a service banner grabber. A simple banner grabber which connects to an open TCP port and prints out anything sent by the listening service within two seconds. Also will attempt to grab the HTTP banner of common listening ports for that service.
 
 Example:
 

@@ -175,7 +175,7 @@ func (s *scanner) scan(opts *ScanOptions, resultsChannel chan<- *ScanResults) er
 			if err == pcap.NextErrorTimeoutExpired {
 				continue
 			} else if err != nil {
-				log.Printf("%s error reading packet: %v", display.BAD, err)
+				//log.Printf("%s error reading packet: %v", display.BAD, err)
 				continue
 			}
 
