@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/user"
+	"strconv"
 	"time"
 
 	"github.com/GobiasSomeCoffeeCo/gosilent/pkg/display"
@@ -30,12 +31,16 @@ type ScanOptions struct {
 	Ports         string
 	Target        string
 	Banner        bool
+	Verbose       bool
 	PortRanges    []int
 }
 
 type ScanResults struct {
-	OpenPorts []int
-	Banner    []string
+	Banner    string
+	TargetIP  string
+	Status    string
+	Port      string
+	Interface string
 }
 
 // scanner handles scanning a single IP address.
@@ -114,7 +119,7 @@ func (s *scanner) close() {
 }
 
 // scan scans the dst IP address of this scanner.
-func (s *scanner) scan(opts *ScanOptions) error {
+func (s *scanner) scan(opts *ScanOptions, resultsChannel chan<- *ScanResults) error {
 	eth, ip4, tcp := s.setUpLayers()
 
 	tcp.SetNetworkLayerForChecksum(&ip4)
@@ -130,12 +135,14 @@ func (s *scanner) scan(opts *ScanOptions) error {
 
 	handleFlags(opts, &tcp)
 
+	defer close(resultsChannel)
 	// Goroutine for sending packets
 	go func() {
 		defer close(done) // Notify other goroutine when done
 
 		start := time.Now()
-		fmt.Println("\033[1;94mStarting GoSilent...\033[0m")
+		fmt.Printf("%s Starting GoSilent...\n", display.RES)
+		fmt.Println(display.LINE)
 
 		for tcp.DstPort < 65535 {
 			start = time.Now()
@@ -201,12 +208,21 @@ func (s *scanner) scan(opts *ScanOptions) error {
 			} else if tcp.RST {
 				//fmt.Printf("%s closed %v\n", display.BAD, tcp.SrcPort)
 			} else if tcp.SYN && tcp.ACK {
-				fmt.Printf("%s open %v\n", display.GOOD, tcp.SrcPort)
-			} else {
-				log.Printf("ignoring useless packet") //
+				res := new(ScanResults)
+				res.Port = strconv.FormatUint(uint64(tcp.SrcPort), 10)
+				res.TargetIP = s.dst.String()
+				res.Interface = s.iface.Name
+				res.Status = fmt.Sprintf("%s open %v", display.GOOD, tcp.SrcPort)
+				resultsChannel <- res
+				if opts.Verbose {
+					fmt.Printf("open %v\n", tcp.SrcPort)
+				}
+				//log.Printf("ignoring useless packet") //
 			}
-
 		case <-done:
+			if opts.Verbose {
+				fmt.Println(display.LINE)
+			}
 			return nil // Exit if done sending packets
 		}
 	}
@@ -264,7 +280,7 @@ func (s *scanner) setUpLayers() (layers.Ethernet, layers.IPv4, layers.TCP) {
 	return eth, ip4, tcp
 }
 
-func SynScan(opts *ScanOptions) {
+func SynScan(opts *ScanOptions, resultsChannel chan<- *ScanResults) {
 	defer util.Run()()
 	currentUser, err := user.Current()
 	if err != nil {
@@ -294,7 +310,7 @@ func SynScan(opts *ScanOptions) {
 		log.Printf("%v unable to create scanner for %v: %v", display.BAD, ip, err)
 		return
 	}
-	if err := s.scan(opts); err != nil {
+	if err := s.scan(opts, resultsChannel); err != nil {
 		log.Printf("%v unable to scan %v: %v", display.BAD, ip, err)
 	}
 	s.close()

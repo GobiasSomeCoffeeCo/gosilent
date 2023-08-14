@@ -17,8 +17,10 @@ func ParseCLI() *silentscan.ScanOptions {
 	flag.BoolVar(&options.UsePSH, "sP", false, "Set PSH flag for TCP")
 	flag.BoolVar(&options.UseACK, "sA", false, "Set ACK flag for TCP")
 	flag.BoolVar(&options.UseURG, "sU", false, "Set URG flag for TCP")
+	flag.BoolVar(&options.Banner, "b", false, "Banner grabber")
+	flag.BoolVar(&options.Verbose, "v", false, "Verbose mode")
 	flag.BoolVar(&options.UseXMas, "sX", false, "Set 'XMas Flag' (URG PSH FIN) for TCP")
-	flag.BoolVar(&options.UseXMas, "b", false, "Attempt to grab the banner from the service")
+	//flag.BoolVar(&options.UseXMas, "b", false, "Attempt to grab the banner from the service")
 	flag.StringVar(&options.InterfaceName, "i", "", "Network interface to use. (e.g., sudo ./gosilent -t 192.168.1.1 -i eno2) If empty, will fallback to system defaults.")
 	//flag.StringVar(&options.Ports, "ports", "22,80,135,139,400-10000", "Ports to scan (e.g., 22,80,139,400-500). Use commas and hyphens for ranges.")
 	flag.StringVar(&options.Target, "t", "", "The target IP you'd like to scan (e.g., sudo ./gosilent -t 192.168.1.1)")
@@ -105,6 +107,12 @@ Usage of gosilent:
     -sP    Set PSH flag for TCP
     -sR    Set RST flag for TCP
     -sX    Set 'XMas Flag' (URG PSH FIN) for TCP
+    ...   (e.g., sudo ./gosilent -t 192.168.1.1 -sF -sA -sP)
+
+  Network Flags:
+    -b    Enable the banner grabber
+    -v    Enable verbose mode
+    ...   (e.g., sudo ./gosilent -t 192.168.1.1 -b -v)
 
     `) // other flag groups can be added similarly
 

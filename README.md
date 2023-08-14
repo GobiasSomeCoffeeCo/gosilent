@@ -1,4 +1,4 @@
-# GoSilent: The Speedy Silent SYN Scanner
+# GoSilent: The Speedy Silent SYN Scanner 
 
 Introducing GoSilent - an enhanced and accelerated version of the [Gopacket Synscan](https://github.com/google/gopacket/blob/master/examples/synscan/main.go). While the traditional scan could take minutes, GoSilent breezes through all 65535 ports in mere seconds.
 
@@ -38,7 +38,7 @@ You now have the flexibility to use interface and network flags with GoSilent to
 
 **Interface Flags:**
 
-    -i Network interface to use. If empty, it will fallback to system defaults.
+    -i <Network interface> If empty, it will fallback to system defaults.
 
 Example:
 
@@ -63,3 +63,13 @@ sudo ./gosilent -t 192.168.1.1 -sF -sA -sP
 
 Feel free to mix and match flags as per your requirements!
 
+**Utility Flags:**
+
+    -b Enable a service banner grabber
+    -v Enable verbose mode
+
+Example:
+
+```bash
+sudo ./gosilent -t 192.168.1.1 -b -v
+```
