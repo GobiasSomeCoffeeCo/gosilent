@@ -11,7 +11,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func BannerGrab(s *ScanResults) {
+func GetTCPBanner(s *ScanResults) {
 	conn, err := net.Dial("tcp", s.TargetIP+":"+s.Port)
 	if err != nil {
 		log.Fatalf("Failed to connect: %s", err)

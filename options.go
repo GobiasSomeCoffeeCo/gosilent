@@ -109,7 +109,7 @@ Usage of gosilent:
     -sX    Set 'XMas Flag' (URG PSH FIN) for TCP
     ...   (e.g., sudo ./gosilent -t 192.168.1.1 -sF -sA -sP)
 
-  Network Flags:
+  Utility Flags:
     -b    Enable the banner grabber
     -v    Enable verbose mode
     ...   (e.g., sudo ./gosilent -t 192.168.1.1 -b -v)
